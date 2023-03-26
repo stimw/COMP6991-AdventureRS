@@ -1,4 +1,4 @@
-use adventurers::{game::MyGame, player::Player};
+use adventurers::{game::MyGame};
 use std::error::Error;
 use std::time::Duration;
 use termgame::{run_game, GameSettings, KeyCode, SimpleEvent};
