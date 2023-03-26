@@ -33,6 +33,11 @@ impl MyGame {
             _ => return,
         };
 
+        // If next block is a barrier, don't move
+        if self.check_next_block_barrier(&coordinate_movement) {
+            return;
+        }
+
         // Move the player
         self.move_player(game, &coordinate_movement);
 
@@ -63,6 +68,8 @@ impl MyGame {
                     .style(GameStyle::new().background_color(Some(GameColor::Red))),
                 Block::Flowers => StyledCharacter::new(' ')
                     .style(GameStyle::new().background_color(Some(GameColor::Magenta))),
+                Block::Barrier => StyledCharacter::new(' ')
+                    .style(GameStyle::new().background_color(Some(GameColor::White))),
             };
             game.set_screen_char(*x, *y, Some(styled_char));
         }
@@ -117,6 +124,15 @@ impl MyGame {
             y: player_y,
         } = self.player.get_position();
         (vp_x..vp_x + 77).contains(&player_x) && (vp_y..vp_y + 21).contains(&player_y)
+    }
+
+    fn check_next_block_barrier(&self, coordinate_movement: &Coordinate) -> bool {
+        let current_block = self.player.get_position();
+        matches!(
+            self.map
+                .get(&(current_block.x + coordinate_movement.x, current_block.y + coordinate_movement.y)),
+            Some(Block::Barrier)
+        )
     }
 }
 
