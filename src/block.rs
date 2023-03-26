@@ -3,9 +3,9 @@ use serde::Deserialize;
 pub enum Block {
     Grass,
     Sand,
-    Rocks,
+    Rock,
     Cinderblock,
-    Flowers,
+    Flowerbush,
     Barrier,
 }
 
@@ -14,9 +14,9 @@ impl std::fmt::Display for Block {
         match self {
             Block::Grass => write!(f, "Grass"),
             Block::Sand => write!(f, "Sand"),
-            Block::Rocks => write!(f, "Rock"),
+            Block::Rock => write!(f, "Rock"),
             Block::Cinderblock => write!(f, "Cinderblock"),
-            Block::Flowers => write!(f, "Flowers"),
+            Block::Flowerbush => write!(f, "Flowers"),
             _ => write!(f, "Other block"),
         }
     }

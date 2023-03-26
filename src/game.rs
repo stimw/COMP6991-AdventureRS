@@ -62,11 +62,11 @@ impl MyGame {
                     .style(GameStyle::new().background_color(Some(GameColor::Green))),
                 Block::Sand => StyledCharacter::new(' ')
                     .style(GameStyle::new().background_color(Some(GameColor::Yellow))),
-                Block::Rocks => StyledCharacter::new(' ')
+                Block::Rock => StyledCharacter::new(' ')
                     .style(GameStyle::new().background_color(Some(GameColor::Gray))),
                 Block::Cinderblock => StyledCharacter::new(' ')
                     .style(GameStyle::new().background_color(Some(GameColor::Red))),
-                Block::Flowers => StyledCharacter::new(' ')
+                Block::Flowerbush => StyledCharacter::new(' ')
                     .style(GameStyle::new().background_color(Some(GameColor::Magenta))),
                 Block::Barrier => StyledCharacter::new(' ')
                     .style(GameStyle::new().background_color(Some(GameColor::White))),

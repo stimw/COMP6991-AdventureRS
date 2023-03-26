@@ -26,16 +26,16 @@ fn test_read_map() {
             (0, 0): Grass,
             (1, 0): Rocks,
             (0, 1): Sand,
-            (1, 1): Flowers
+            (1, 1): Flowerbush
         }
     "#;
     std::fs::write(file_path, map_data).unwrap();
 
     let expected_map: HashMap<(i32, i32), Block> = [
         ((0, 0), Block::Grass),
-        ((1, 0), Block::Rocks),
+        ((1, 0), Block::Rock),
         ((0, 1), Block::Sand),
-        ((1, 1), Block::Flowers),
+        ((1, 1), Block::Flowerbush),
     ]
     .iter()
     .cloned()
