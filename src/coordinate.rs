@@ -4,24 +4,21 @@ pub struct Coordinate {
     pub y: i32,
 }
 
+// These are the offsets for the movement
 impl Coordinate {
-    pub fn stay_still() -> Self {
-        Self { x: 0, y: 0 }
-    }
-
-    pub fn move_up() -> Self {
+    pub fn up_offset() -> Self {
         Self { x: 0, y: -1 }
     }
 
-    pub fn move_down() -> Self {
+    pub fn down_offset() -> Self {
         Self { x: 0, y: 1 }
     }
 
-    pub fn move_left() -> Self {
+    pub fn left_offset() -> Self {
         Self { x: -1, y: 0 }
     }
 
-    pub fn move_right() -> Self {
+    pub fn right_offset() -> Self {
         Self { x: 1, y: 0 }
     }
 }

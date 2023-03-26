@@ -23,10 +23,10 @@ impl MyGame {
 
     pub fn game_move(&mut self, game: &mut Game, keycode: KeyCode) {
         let coordinate_movement = match keycode {
-            KeyCode::Up => Coordinate::move_up(),
-            KeyCode::Down => Coordinate::move_down(),
-            KeyCode::Left => Coordinate::move_left(),
-            KeyCode::Right => Coordinate::move_right(),
+            KeyCode::Up => Coordinate::up_offset(),
+            KeyCode::Down => Coordinate::down_offset(),
+            KeyCode::Left => Coordinate::left_offset(),
+            KeyCode::Right => Coordinate::right_offset(),
             _ => return,
         };
 
@@ -82,7 +82,12 @@ impl MyGame {
 
 impl Controller for MyGame {
     fn on_start(&mut self, game: &mut Game) {
-        self.move_player(game, &Coordinate::stay_still());
+        // Set the player
+        game.set_screen_char(
+            self.player.get_x(),
+            self.player.get_y(),
+            Some(StyledCharacter::new(self.player.icon)),
+        );
     }
 
     fn on_event(&mut self, game: &mut Game, event: GameEvent) {
