@@ -4,7 +4,15 @@ use std::time::Duration;
 use termgame::{run_game, GameSettings, KeyCode, SimpleEvent};
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let mut controller = MyGame::default();
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() != 3 {
+        eprintln!("Usage: {} <map_file> <quest_number>", args[0]);
+        std::process::exit(1);
+    }
+    let file_path = &args[1];
+    // let quest_num = &args[2];
+
+    let mut controller = MyGame::new(file_path)?;
 
     run_game(
         &mut controller,

@@ -1,24 +1,27 @@
+use crate::block::Block;
 use crate::coordinate::{Coordinate, CoordinateController};
+use crate::map::map_from_file;
 use crate::player::Player;
+use std::collections::HashMap;
+use std::{io::Error as IoError, path::Path};
 use termgame::{
-    Controller, Game, GameEvent, KeyCode, SimpleEvent, StyledCharacter, ViewportLocation,
+    Controller, Game, GameColor, GameEvent, GameStyle, KeyCode, SimpleEvent, StyledCharacter,
+    ViewportLocation,
 };
 
 pub struct MyGame {
     player: Player,
-}
-
-impl Default for MyGame {
-    fn default() -> Self {
-        Self::new()
-    }
+    map: HashMap<(i32, i32), Block>,
 }
 
 impl MyGame {
-    pub fn new() -> Self {
-        Self {
-            player: Player::new(),
-        }
+    pub fn new(file_path: impl AsRef<Path>) -> Result<Self, IoError> {
+        let map = map_from_file(file_path)?;
+
+        Ok(Self {
+            player: Player::default(),
+            map,
+        })
     }
 
     pub fn game_move(&mut self, game: &mut Game, keycode: KeyCode) {
@@ -46,27 +49,64 @@ impl MyGame {
 
 // Private methods
 impl MyGame {
-     // Move the player according to the coordinate movement
-     fn move_player(&mut self, game: &mut Game, coordinate_movement: &Coordinate) {
-        // 1. Remove the player from the current position
-        let current_styled_char = game.get_screen_char(self.player.get_x(), self.player.get_y());
-        if let Some(styled_char) = current_styled_char {
+    // Initialize the map
+    fn init_map(&mut self, game: &mut Game) {
+        for ((x, y), block) in &self.map {
+            let styled_char = match block {
+                Block::Grass => StyledCharacter::new(' ')
+                    .style(GameStyle::new().background_color(Some(GameColor::Green))),
+                Block::Sand => StyledCharacter::new(' ')
+                    .style(GameStyle::new().background_color(Some(GameColor::Yellow))),
+                Block::Rocks => StyledCharacter::new(' ')
+                    .style(GameStyle::new().background_color(Some(GameColor::Gray))),
+                Block::Cinderblock => StyledCharacter::new(' ')
+                    .style(GameStyle::new().background_color(Some(GameColor::Red))),
+                Block::Flowers => StyledCharacter::new(' ')
+                    .style(GameStyle::new().background_color(Some(GameColor::Magenta))),
+            };
+            game.set_screen_char(*x, *y, Some(styled_char));
+        }
+    }
+
+    // Move the player according to the coordinate movement
+    fn init_player(&mut self, game: &mut Game) {
+        self.add_player_to_screen(game);
+    }
+
+    fn move_player(&mut self, game: &mut Game, coordinate_movement: &Coordinate) {
+        self.remove_player_from_screen(game);
+        self.player.move_by(coordinate_movement);
+        self.add_player_to_screen(game);
+    }
+
+    fn remove_player_from_screen(&self, game: &mut Game) {
+        let styled_char = game.get_screen_char(self.player.get_x(), self.player.get_y());
+        if let Some(style) = styled_char {
             game.set_screen_char(
                 self.player.get_x(),
                 self.player.get_y(),
-                Some(styled_char.character(' ')),
+                Some(style.character(' ')),
+            );
+        } else {
+            game.set_screen_char(self.player.get_x(), self.player.get_y(), None);
+        }
+    }
+
+    fn add_player_to_screen(&self, game: &mut Game) {
+        let styled_char = game.get_screen_char(self.player.get_x(), self.player.get_y());
+        if let Some(style) = styled_char {
+            game.set_screen_char(
+                self.player.get_x(),
+                self.player.get_y(),
+                Some(style.character(self.player.icon)),
+            );
+        } else {
+            game.set_screen_char(
+                self.player.get_x(),
+                self.player.get_y(),
+                Some(StyledCharacter::from(self.player.icon)),
             );
         }
-
-        // 2. Move the player
-        self.player.move_by(coordinate_movement);
-
-        // 3. Add the player to the new position
-        game.set_screen_char(
-            self.player.get_x(),
-            self.player.get_y(),
-            Some(StyledCharacter::new(self.player.icon)),
-        );
     }
 
     // Check if the player is in the viewport after moving
@@ -82,12 +122,10 @@ impl MyGame {
 
 impl Controller for MyGame {
     fn on_start(&mut self, game: &mut Game) {
-        // Set the player
-        game.set_screen_char(
-            self.player.get_x(),
-            self.player.get_y(),
-            Some(StyledCharacter::new(self.player.icon)),
-        );
+        // Initialize the map
+        self.init_map(game);
+        // Initialize the player
+        self.init_player(game);
     }
 
     fn on_event(&mut self, game: &mut Game, event: GameEvent) {
