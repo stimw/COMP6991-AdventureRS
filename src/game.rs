@@ -5,8 +5,8 @@ use crate::player::Player;
 use std::collections::HashMap;
 use std::{io::Error as IoError, path::Path};
 use termgame::{
-    Controller, Game, GameColor, GameEvent, GameStyle, KeyCode, SimpleEvent, StyledCharacter,
-    ViewportLocation,
+    Controller, Game, GameColor, GameEvent, GameStyle, KeyCode, Message, SimpleEvent,
+    StyledCharacter, ViewportLocation,
 };
 
 pub struct MyGame {
@@ -22,6 +22,10 @@ impl MyGame {
             player: Player::default(),
             map,
         })
+    }
+
+    pub fn get_current_block(&self, coordinate: &Coordinate) -> Option<&Block> {
+        self.map.get(&(coordinate.x, coordinate.y))
     }
 
     pub fn game_move(&mut self, game: &mut Game, keycode: KeyCode) {
@@ -49,6 +53,19 @@ impl MyGame {
             viewport_location.y += coordinate_movement.y;
             game.set_viewport(viewport_location);
         }
+
+        // Change the player's state
+        match self.get_current_block(&self.player.get_position()) {
+            Some(Block::Water) => self.player.move_in_water(game),
+            Some(Block::Sign(message)) => {
+                game.set_message(Some(Message {
+                    title: Some(String::from("Message")),
+                    text: message.clone(),
+                }));
+                self.player.move_out_of_water()
+            }
+            _ => self.player.move_out_of_water(),
+        };
     }
 }
 
@@ -70,6 +87,10 @@ impl MyGame {
                     .style(GameStyle::new().background_color(Some(GameColor::Magenta))),
                 Block::Barrier => StyledCharacter::new(' ')
                     .style(GameStyle::new().background_color(Some(GameColor::White))),
+                Block::Water => StyledCharacter::new(' ')
+                    .style(GameStyle::new().background_color(Some(GameColor::Blue))),
+                Block::Sign(_) => StyledCharacter::new('💬'),
+                Block::Object(character) => StyledCharacter::new(*character),
             };
             game.set_screen_char(*x, *y, Some(styled_char));
         }
@@ -89,10 +110,14 @@ impl MyGame {
     fn remove_player_from_screen(&self, game: &mut Game) {
         let styled_char = game.get_screen_char(self.player.get_x(), self.player.get_y());
         if let Some(style) = styled_char {
+            let character = match self.get_current_block(&self.player.get_position()) {
+                Some(Block::Sign(_)) => '💬',
+                _ => ' ',
+            };
             game.set_screen_char(
                 self.player.get_x(),
                 self.player.get_y(),
-                Some(style.character(' ')),
+                Some(style.character(character)),
             );
         } else {
             game.set_screen_char(self.player.get_x(), self.player.get_y(), None);
@@ -129,8 +154,10 @@ impl MyGame {
     fn check_next_block_barrier(&self, coordinate_movement: &Coordinate) -> bool {
         let current_block = self.player.get_position();
         matches!(
-            self.map
-                .get(&(current_block.x + coordinate_movement.x, current_block.y + coordinate_movement.y)),
+            self.map.get(&(
+                current_block.x + coordinate_movement.x,
+                current_block.y + coordinate_movement.y
+            )),
             Some(Block::Barrier)
         )
     }
@@ -145,6 +172,15 @@ impl Controller for MyGame {
     }
 
     fn on_event(&mut self, game: &mut Game, event: GameEvent) {
+        // Check previous messages first
+        if let Some(Message { text, .. }) = game.get_message() {
+            if matches!(text.as_str(), "You are drowned." | "YOU WIN!") {
+                game.end_game();
+            } else {
+                game.set_message(None);
+            }
+        }
+
         if let SimpleEvent::Just(key_code) = event.into() {
             self.game_move(game, key_code);
         }

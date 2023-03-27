@@ -7,6 +7,9 @@ pub enum Block {
     Cinderblock,
     Flowerbush,
     Barrier,
+    Water,
+    Sign(String),
+    Object(char),
 }
 
 impl std::fmt::Display for Block {
@@ -17,6 +20,7 @@ impl std::fmt::Display for Block {
             Block::Rock => write!(f, "Rock"),
             Block::Cinderblock => write!(f, "Cinderblock"),
             Block::Flowerbush => write!(f, "Flowers"),
+            Block::Water => write!(f, "Water"),
             _ => write!(f, "Other block"),
         }
     }

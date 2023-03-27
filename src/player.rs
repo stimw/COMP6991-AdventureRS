@@ -1,8 +1,11 @@
 use crate::coordinate::{Coordinate, CoordinateController};
+use termgame::{Game, Message};
 
 pub struct Player {
     pub icon: char,
     position: Coordinate,
+    is_in_water: bool,
+    blocks_in_water: i32,
 }
 
 impl Default for Player {
@@ -16,7 +19,30 @@ impl Player {
         Self {
             icon: '\u{2657}',
             position: Coordinate { x: 3, y: 3 },
+            is_in_water: false,
+            blocks_in_water: 0,
         }
+    }
+
+    pub fn move_in_water(&mut self, game: &mut Game) {
+        if !self.is_in_water {
+            self.is_in_water = true;
+            self.blocks_in_water = 0;
+        }
+
+        self.blocks_in_water += 1;
+
+        if self.blocks_in_water >= 10 {
+            game.set_message(Some(Message {
+                title: Some(String::from("Message")),
+                text: (String::from("You are drowned.")),
+            }));
+        }
+    }
+
+    pub fn move_out_of_water(&mut self) {
+        self.is_in_water = false;
+        self.blocks_in_water = 0;
     }
 }
 
