@@ -10,9 +10,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         std::process::exit(1);
     }
     let file_path = &args[1];
-    // let quest_num = &args[2];
+    let quest_num = &args[2];
 
-    let mut controller = MyGame::new(file_path)?;
+    let mut controller = MyGame::new(file_path, quest_num)?;
 
     run_game(
         &mut controller,

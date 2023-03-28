@@ -1,7 +1,9 @@
 use crate::block::Block;
 use crate::coordinate::{Coordinate, CoordinateController};
+use crate::game_quest::{GameQuest, GameQuestEvent};
 use crate::map::map_from_file;
 use crate::player::Player;
+use adventurers_quest::{EventType, Quest};
 use std::collections::HashMap;
 use std::{io::Error as IoError, path::Path};
 use termgame::{
@@ -9,23 +11,29 @@ use termgame::{
     StyledCharacter, ViewportLocation,
 };
 
+fn get_quest_by_string(quest: &str) -> Box<dyn Quest<GameQuestEvent>> {
+    match quest {
+        "q1" => GameQuest::Q1.get_guest(),
+        "q2" => GameQuest::Q2.get_guest(),
+        _ => GameQuest::Q3.get_guest(),
+    }
+}
+
 pub struct MyGame {
     player: Player,
     map: HashMap<(i32, i32), Block>,
+    quest: Box<dyn Quest<GameQuestEvent>>,
 }
 
 impl MyGame {
-    pub fn new(file_path: impl AsRef<Path>) -> Result<Self, IoError> {
+    pub fn new(file_path: impl AsRef<Path>, quest_num: &str) -> Result<Self, IoError> {
         let map = map_from_file(file_path)?;
 
         Ok(Self {
             player: Player::default(),
             map,
+            quest: get_quest_by_string(quest_num),
         })
-    }
-
-    pub fn get_current_block(&self, coordinate: &Coordinate) -> Option<&Block> {
-        self.map.get(&(coordinate.x, coordinate.y))
     }
 
     pub fn game_move(&mut self, game: &mut Game, keycode: KeyCode) {
@@ -101,6 +109,10 @@ impl MyGame {
         self.add_player_to_screen(game);
     }
 
+    pub fn get_current_block(&self, coordinate: &Coordinate) -> Option<&Block> {
+        self.map.get(&(coordinate.x, coordinate.y))
+    }
+
     fn move_player(&mut self, game: &mut Game, coordinate_movement: &Coordinate) {
         self.remove_player_from_screen(game);
         self.player.move_by(coordinate_movement);
@@ -161,6 +173,19 @@ impl MyGame {
             Some(Block::Barrier)
         )
     }
+
+    fn generate_event(&self, block: &Block) -> GameQuestEvent {
+        match block {
+            Block::Object(_) => GameQuestEvent {
+                block: block.clone(),
+                event_type: EventType::Collect,
+            },
+            _ => GameQuestEvent {
+                block: block.clone(),
+                event_type: EventType::Walk,
+            },
+        }
+    }
 }
 
 impl Controller for MyGame {
@@ -182,7 +207,32 @@ impl Controller for MyGame {
         }
 
         if let SimpleEvent::Just(key_code) = event.into() {
-            self.game_move(game, key_code);
+            match key_code {
+                KeyCode::Char('q') => {
+                    game.set_message(Some(Message {
+                        title: Some("Quest".to_string()),
+                        text: format!("{}", self.quest),
+                    }));
+                }
+                _ => {
+                    self.game_move(game, key_code);
+
+                    // generate event
+                    let current_block = self
+                        .get_current_block(&self.player.get_position())
+                        .unwrap_or(&Block::Barrier);
+                    let event = self.generate_event(current_block);
+
+                    if let adventurers_quest::QuestStatus::Complete =
+                        self.quest.register_event(&event)
+                    {
+                        game.set_message(Some(Message {
+                            title: Some(String::from("Quest")),
+                            text: String::from("YOU WIN!"),
+                        }));
+                    }
+                }
+            }
         }
     }
 
