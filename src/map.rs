@@ -7,6 +7,7 @@ use std::{
     path::Path,
 };
 
+/// Parse the map from a ron file
 pub fn map_from_file(file_path: impl AsRef<Path>) -> Result<HashMap<(i32, i32), Block>, IoError> {
     let f = File::open(&file_path)?;
     let map = from_reader(f).map_err(|err| {

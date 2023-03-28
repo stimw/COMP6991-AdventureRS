@@ -1,6 +1,7 @@
 use crate::coordinate::{Coordinate, CoordinateController};
 use termgame::{Game, Message};
 
+/// The player struct
 pub struct Player {
     pub icon: char,
     position: Coordinate,
@@ -46,6 +47,7 @@ impl Player {
     }
 }
 
+// The player should be able to move as a coordinate controller
 impl CoordinateController for Player {
     fn move_by(&mut self, coordinate: &Coordinate) {
         self.position.x += coordinate.x;

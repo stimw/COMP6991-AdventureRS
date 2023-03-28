@@ -1,5 +1,6 @@
-use serde::Deserialize;
 use adventurers_quest::BlockTrait;
+use serde::Deserialize;
+
 #[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 pub enum Block {
     Grass,
