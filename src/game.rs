@@ -214,6 +214,9 @@ impl Controller for MyGame {
                         text: format!("{}", self.quest),
                     }));
                 }
+                KeyCode::Char('r') => {
+                    self.quest.reset();
+                }
                 _ => {
                     self.game_move(game, key_code);
 

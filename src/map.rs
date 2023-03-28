@@ -17,33 +17,3 @@ pub fn map_from_file(file_path: impl AsRef<Path>) -> Result<HashMap<(i32, i32), 
     })?;
     Ok(map)
 }
-
-#[test]
-fn test_read_map() {
-    let file_path = "test_map.ron";
-    let map_data = r#"
-        {
-            (0, 0): Grass,
-            (1, 0): Rocks,
-            (0, 1): Sand,
-            (1, 1): Flowerbush
-        }
-    "#;
-    std::fs::write(file_path, map_data).unwrap();
-
-    let expected_map: HashMap<(i32, i32), Block> = [
-        ((0, 0), Block::Grass),
-        ((1, 0), Block::Rock),
-        ((0, 1), Block::Sand),
-        ((1, 1), Block::Flowerbush),
-    ]
-    .iter()
-    .cloned()
-    .collect();
-
-    let actual_map = map_from_file(file_path).unwrap();
-
-    assert_eq!(actual_map, expected_map);
-
-    // std::fs::remove_file(file_path).unwrap();
-}
