@@ -25,6 +25,7 @@ pub struct MyGame {
     player: Player,
     map: HashMap<(i32, i32), Block>,
     quest: Box<dyn Quest<GameQuestEvent>>,
+    is_game_over: bool,
 }
 
 impl MyGame {
@@ -35,6 +36,7 @@ impl MyGame {
             player: Player::default(),
             map,
             quest: get_quest_by_string(quest_num),
+            is_game_over: false,
         })
     }
 
@@ -68,20 +70,25 @@ impl MyGame {
 
         // 5. Check if the player is in water or on a sign
         match self.get_current_block(&self.player.get_position()) {
-            Some(Block::Water) => self.player.move_in_water(game),
+            Some(Block::Water) => {
+                self.player.move_in_water(game);
+                if self.player.is_drowned() {
+                    self.is_game_over = true;
+                }
+            }
             Some(Block::Sign(message)) => {
                 game.set_message(Some(Message {
                     title: Some(String::from("Message")),
                     text: message.clone(),
                 }));
-                self.player.move_out_of_water()
+                self.player.move_outside_water()
             }
-            _ => self.player.move_out_of_water(),
+            _ => self.player.move_outside_water(),
         };
     }
 }
 
-// Helpful methods
+// Just Helpful methods
 impl MyGame {
     /// Initialize the map
     fn init_map(&mut self, game: &mut Game) {
@@ -191,15 +198,13 @@ impl Controller for MyGame {
     }
 
     fn on_event(&mut self, game: &mut Game, event: GameEvent) {
-        // Check previous messages first
-        // If the player is drowned or won the game, end the game
-        if let Some(Message { text, .. }) = game.get_message() {
-            if matches!(text.as_str(), "You are drowned." | "YOU WIN!") {
-                game.end_game();
-            } else {
-                game.set_message(None);
-            }
+        // Check if the game is over
+        if self.is_game_over {
+            game.end_game();
         }
+
+        // Clear the message
+        game.set_message(None);
 
         // Handle KeyCode Events
         if let SimpleEvent::Just(key_code) = event.into() {
@@ -216,7 +221,7 @@ impl Controller for MyGame {
                 KeyCode::Char('r') => {
                     self.quest.reset();
                 }
-                
+
                 // Otherwise, move the player according to the key pressed
                 _ => {
                     // handle movement
@@ -238,13 +243,14 @@ impl Controller for MyGame {
                     };
 
                     // register event
-                    if let adventurers_quest::QuestStatus::Complete = 
+                    if let adventurers_quest::QuestStatus::Complete =
                         self.quest.register_event(&event)
                     {
                         game.set_message(Some(Message {
                             title: Some(String::from("Quest")),
                             text: String::from("YOU WIN!"),
                         }));
+                        self.is_game_over = true;
                     }
                 }
             }

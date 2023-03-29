@@ -7,6 +7,7 @@ pub struct Player {
     position: Coordinate,
     is_in_water: bool,
     blocks_in_water: i32,
+    is_drowned: bool,
 }
 
 impl Default for Player {
@@ -22,6 +23,7 @@ impl Player {
             position: Coordinate { x: 3, y: 3 },
             is_in_water: false,
             blocks_in_water: 0,
+            is_drowned: false,
         }
     }
 
@@ -34,6 +36,8 @@ impl Player {
         self.blocks_in_water += 1;
 
         if self.blocks_in_water >= 10 {
+            self.is_drowned = true;
+
             game.set_message(Some(Message {
                 title: Some(String::from("Message")),
                 text: (String::from("You are drowned.")),
@@ -41,9 +45,13 @@ impl Player {
         }
     }
 
-    pub fn move_out_of_water(&mut self) {
+    pub fn move_outside_water(&mut self) {
         self.is_in_water = false;
         self.blocks_in_water = 0;
+    }
+
+    pub fn is_drowned(&mut self) -> bool {
+        self.is_drowned
     }
 }
 
